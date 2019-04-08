@@ -1,7 +1,7 @@
 
 export enum EventType { REGULAR, OUT_OF_OFFICE };
 
-export enum Overlap { NONE, PARTIAL_EARLIER, PARTIAL_LATER, FULL };
+export enum Overlap { NONE, PARTIAL, FULL };
 
 export class EventDifference {
     constructor(
@@ -44,7 +44,7 @@ export class Event {
                 differenceInMillis = 0;
                 break;
             }
-            case Overlap.PARTIAL_EARLIER: {
+            case Overlap.PARTIAL: {
                 differenceInMillis = other.to.getTime() - this.to.getTime();
                 break;
             }
@@ -81,7 +81,7 @@ export class Event {
         // --- F -- OF -- T -- OT --->
         // --- F OF ----- T -- OT --->
         if (timeFrom <= otherTimeFrom && timeTo < otherTimeTo && otherTimeFrom < timeTo) {
-            return Overlap.PARTIAL_EARLIER;
+            return Overlap.PARTIAL;
         }
 
         // no overlap

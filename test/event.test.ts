@@ -29,7 +29,7 @@ describe('calculateDifferenceInMillis', () => {
 
         let diff = event1.calculateDifference(event2);
 
-        expect(diff.overlap).toBe(Overlap.PARTIAL_EARLIER);
+        expect(diff.overlap).toBe(Overlap.PARTIAL);
         expect(diff.differenceInMillis).toBe(1 * 60 * 60 * 1000);
         expect(diff.endsBefore).toBe(true);
     });
@@ -90,20 +90,20 @@ describe('overlapsWith', () => {
         let event1 = new Event('event #1', new Date('2019-04-01T09:00:00.000Z'), new Date('2019-04-01T11:00:00.000Z'), EventType.REGULAR);
         let event2 = new Event('event #2', new Date('2019-04-01T09:00:00.000Z'), new Date('2019-04-01T12:00:00.000Z'), EventType.REGULAR);
 
-        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL_EARLIER);
+        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL);
     });
 
     test('returns partial_earilier overlap between events when #1 started before #2', () => {
         let event1 = new Event('event #1', new Date('2019-04-01T09:00:00.000Z'), new Date('2019-04-01T11:00:00.000Z'), EventType.REGULAR);
         let event2 = new Event('event #2', new Date('2019-04-01T10:00:00.000Z'), new Date('2019-04-01T12:00:00.000Z'), EventType.REGULAR);
 
-        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL_EARLIER);
+        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL);
     });
 
     test('returns partial_later overlap between events when #1 started at the same time as #2', () => {
         let event1 = new Event('event #1', new Date('2019-04-01T09:00:00.000Z'), new Date('2019-04-01T10:00:00.000Z'), EventType.REGULAR);
         let event2 = new Event('event #2', new Date('2019-04-01T09:00:00.000Z'), new Date('2019-04-01T11:00:00.000Z'), EventType.REGULAR);
 
-        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL_EARLIER);
+        expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL);
     });
 });
