@@ -1,0 +1,6 @@
+{
+  "timeZone": "Europe/Warsaw",
+  "dependencies": {
+  },
+  "exceptionLogging": "STACKDRIVER"
+}
