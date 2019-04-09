@@ -1,5 +1,6 @@
 import { Event, EventType } from "../src/event";
 import { dateToKey, OfficeHours, DayOfWeek, PeriodStats } from "../src/period-stats";
+import { e } from "./event.test";
 
 test('formatting date to YYYY-MM-DD string key', () => {
     let date = new Date("2019-04-05");
@@ -21,9 +22,9 @@ test('calculating occupation in basic case', () => {
     // 9:00 - 10:00, 10:30 - 11:00, 15:00 - 16:00
     // 2.5 hours of occupancy 
     let events = [
-        new Event('event #1', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T10:00:00.000Z'), EventType.REGULAR),
-        new Event('event #2', new Date('2019-04-01T10:30:00.000Z'),  new Date('2019-04-01T11:00:00.000Z'), EventType.REGULAR),
-        new Event('event #3', new Date('2019-04-01T15:00:00.000Z'),  new Date('2019-04-01T16:00:00.000Z'), EventType.REGULAR)
+        e('#1', '2019-04-01T09:00',  '2019-04-01T10:00'),
+        e('#2', '2019-04-01T10:30',  '2019-04-01T11:00'),
+        e('#3', '2019-04-01T15:00',  '2019-04-01T16:00')
     ];
 
     let occupancy = periodStats(events).occupancy();
@@ -41,8 +42,8 @@ test('calculating occupation of fully overlapping events', () => {
     // 9:00 - 10:00, 09:00 - 09:30
     // 1 hour of occupancy 
     let events = [
-        new Event('event #1', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T10:00:00.000Z'), EventType.REGULAR),
-        new Event('event #2', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T09:30:00.000Z'), EventType.REGULAR)
+        e('#1', '2019-04-01T09:00',  '2019-04-01T10:00'),
+        e('#2', '2019-04-01T09:00',  '2019-04-01T09:30')
     ];
 
     let occupancy = periodStats(events).occupancy();
@@ -61,8 +62,8 @@ test('calculating occupation of partially overlapping events', () => {
     // 9:00 - 10:00, 09:30 - 11:00
     // 2 hours of occupancy 
     let events = [
-        new Event('event #1', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T10:00:00.000Z'), EventType.REGULAR),
-        new Event('event #2', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T11:00:00.000Z'), EventType.REGULAR)
+        e('#1', '2019-04-01T09:00',  '2019-04-01T10:00'),
+        e('#2', '2019-04-01T09:00',  '2019-04-01T11:00')
     ];
 
     let occupancy = periodStats(events).occupancy();
@@ -78,8 +79,8 @@ test('calculating occupation of partially overlapping events', () => {
 
 test('calculating occupation of multiple days', () => {
     let events = [
-        new Event('event #1', new Date('2019-04-01T09:00:00.000Z'),  new Date('2019-04-01T10:00:00.000Z'), EventType.REGULAR),
-        new Event('event #2', new Date('2019-04-02T10:30:00.000Z'),  new Date('2019-04-02T11:00:00.000Z'), EventType.REGULAR)
+        e('#1', '2019-04-01T09:00',  '2019-04-01T10:00'),
+        e('#2', '2019-04-02T10:30',  '2019-04-02T11:00')
     ];
 
     let occupancy = periodStats(events).occupancy();
@@ -90,9 +91,9 @@ test('calculating occupation of multiple days', () => {
 
 test('skip free days when calculating occupation', () => {
     let events = [
-        new Event('Friday', new Date('2019-04-05T10:30:00.000Z'),  new Date('2019-04-05T11:00:00.000Z'), EventType.REGULAR),
-        new Event('Saturday', new Date('2019-04-06T10:30:00.000Z'),  new Date('2019-04-06T11:00:00.000Z'), EventType.REGULAR),
-        new Event('Sunday', new Date('2019-04-07T10:30:00.000Z'),  new Date('2019-04-07T11:00:00.000Z'), EventType.REGULAR),
+        e('Friday', '2019-04-05T10:30',  '2019-04-05T11:00'),
+        e('Saturday', '2019-04-06T10:30',  '2019-04-06T11:00'),
+        e('Sunday', '2019-04-07T10:30',  '2019-04-07T11:00'),
     ];
 
     let occupancy = periodStats(events).occupancy();
@@ -102,7 +103,7 @@ test('skip free days when calculating occupation', () => {
 
 test('calculate occupation for multi-day events', () => {
     let events = [
-        new Event('event #1', new Date('2019-04-01T00:00:00.000Z'),  new Date('2019-04-02T23:59:00.000Z'), EventType.REGULAR)
+        e('#1', '2019-04-01T00:00',  '2019-04-02T23:59')
     ];
 
     let occupancy = periodStats(events).occupancy();
