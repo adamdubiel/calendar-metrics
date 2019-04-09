@@ -2,7 +2,7 @@ import { Event } from "./event";
 import { extractEvents } from "./gcalendar-extractor";
 import { DayOfWeek, OfficeHours, PeriodStats } from "./period-stats";
 
-export { run, calculateOccupancy, debugPrintDays };
+export { run, extractAndPresent, EventsProvider };
 
 const calendarName = 'adam.dubiel@allegro.pl';
 
@@ -10,8 +10,27 @@ const startDate = date(2019, 4, 1);
 const endDate = date(2019, 4, 6);
 const workDays = [DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY];
 
+function date(year: number, month: number, day: number): Date {
+    return new Date(year, month - 1, day);
+}
+
+interface EventsProvider {
+    extractEvents(calendarName: string, from: Date, to: Date): Event[]
+}
+
+class GCalendarEventsProvider implements EventsProvider {
+    extractEvents(calendarName: string, from: Date, to: Date): Event[] {
+        return extractEvents(calendarName, from, to);
+    }
+}
+
 function run() {
-    let events = extractEvents(calendarName, startDate, endDate);
+    let eventsProvider = new GCalendarEventsProvider();
+    extractAndPresent(eventsProvider);
+}
+
+function extractAndPresent(provider: EventsProvider): void {
+    let events = provider.extractEvents(calendarName, startDate, endDate);
     
     debugPrintEvents(events);
 
@@ -41,8 +60,4 @@ function debugPrintDays(stats: PeriodStats): void {
     occupancy.days.forEach(day => {
         console.log(`Day: ${day.date} Occupancy: ${day.occupancy} Number Of Events: ${day.numberOfEvents}`);
     });
-}
-
-function date(year: number, month: number, day: number): Date {
-    return new Date(year, month - 1, day);
 }

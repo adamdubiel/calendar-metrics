@@ -1,12 +1,19 @@
-import { calculateOccupancy, debugPrintDays } from "../src/calendar-metrics";
-import { Event, EventType } from "../src/event";
-import { DayOfWeek, OfficeHours } from "../src/period-stats";
+import { extractAndPresent, EventsProvider } from "../src/calendar-metrics";
 import { e } from "./event.test";
+import { Event } from "../src/event";
 
-const workDays = [DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY];
+class StaticEventsProvider implements EventsProvider {
+    constructor(
+        readonly events: Event[]
+    ) {};
+
+    extractEvents(calendarName: string, from: Date, to: Date): Event[] {
+        return this.events;
+    }
+}
 
 test('real case', () => {
-    let events = [
+    let eventsProvider = new StaticEventsProvider([
         e('Tłumaczenie/ internacjonalizacja allegro.pl - plan działania', '2019-04-01T09:00', '2019-04-01T09:30'),
         e('Uzupełnienie KPI Allegro', '2019-04-01T09:00', '2019-04-01T09:30'),
         e('Pogadanie', '2019-04-01T09:30', '2019-04-01T10:00'),
@@ -33,9 +40,7 @@ test('real case', () => {
         e('Onboarding Tech Day 1', '2019-04-04T10:00', '2019-04-04T17:00'),
         e('Lunch', '2019-04-04T13:00', '2019-04-04T13:30'),
         e('Onboarding Tech Day 2', '2019-04-05T08:30', '2019-04-05T14:30')
-    ];
+    ]);
 
-    let occupancy = calculateOccupancy(events, new OfficeHours(8, 17, workDays));
-
-    debugPrintDays(occupancy);
+    extractAndPresent(eventsProvider);
 });
