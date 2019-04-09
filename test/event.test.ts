@@ -107,3 +107,49 @@ describe('overlapsWith', () => {
         expect(event1.overlapsWith(event2)).toBe(Overlap.PARTIAL);
     });
 });
+
+describe('isMultiDay', () => {
+    test('returns false when event starts and ends on same day', () => {
+        let event = new Event(
+            'event',
+            new Date('2019-04-01T09:00:00.000Z'),
+            new Date('2019-04-01T10:00:00.000Z'),
+            EventType.REGULAR
+        );
+
+        expect(event.isMultiDay()).toBe(false);
+    });
+
+    test('returns false when event ends on different day', () => {
+        let event = new Event(
+            'event',
+            new Date('2019-04-01T09:00:00.000Z'),
+            new Date('2019-04-02T10:00:00.000Z'),
+            EventType.REGULAR
+        );
+
+        expect(event.isMultiDay()).toBe(true);
+    });
+
+    test('returns false when event ends on different month', () => {
+        let event = new Event(
+            'event',
+            new Date('2019-03-31T09:00:00.000Z'),
+            new Date('2019-04-01T10:00:00.000Z'),
+            EventType.REGULAR
+        );
+
+        expect(event.isMultiDay()).toBe(true);
+    });
+
+    test('returns false when event ends on different year', () => {
+        let event = new Event(
+            'event',
+            new Date('2019-12-31T09:00:00.000Z'),
+            new Date('2020-01-01T10:00:00.000Z'),
+            EventType.REGULAR
+        );
+
+        expect(event.isMultiDay()).toBe(true);
+    });
+});

@@ -19,12 +19,18 @@ export class Event {
         readonly type: EventType
     ) {}
 
+    isMultiDay(): boolean {
+        return this.from.getFullYear() != this.to.getFullYear()
+            || this.from.getMonth() != this.to.getMonth()
+            || this.from.getDay() != this.to.getDay();
+    }
+
     endsBefore(other: Event): boolean {
-        return this.to.getTime() <= other.to.getTime();
+        return this.to.valueOf() <= other.to.valueOf();
     }
 
     durationInMillis(): number {
-        return this.to.getTime() - this.from.getTime();
+        return this.to.valueOf() - this.from.valueOf();
     }
 
     /**
@@ -45,7 +51,7 @@ export class Event {
                 break;
             }
             case Overlap.PARTIAL: {
-                differenceInMillis = other.to.getTime() - this.to.getTime();
+                differenceInMillis = other.to.valueOf() - this.to.valueOf();
                 break;
             }
             default: {
@@ -61,10 +67,10 @@ export class Event {
      * @param other 
      */
     overlapsWith(other: Event): Overlap {
-        let timeFrom = this.from.getTime();
-        let timeTo = this.to.getTime();
-        let otherTimeFrom = other.from.getTime();
-        let otherTimeTo = other.to.getTime();
+        let timeFrom = this.from.valueOf();
+        let timeTo = this.to.valueOf();
+        let otherTimeFrom = other.from.valueOf();
+        let otherTimeTo = other.to.valueOf();
 
         if (timeFrom > otherTimeFrom) {
             throw "Other event starts before this! To calculate overlap events need to be ordered by start time!"

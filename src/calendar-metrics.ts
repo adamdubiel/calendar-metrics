@@ -2,30 +2,38 @@ import "./gcalendar-extractor"
 import { Event, Overlap } from "./event";
 import { extractEvents } from "./gcalendar-extractor";
 
-export { run, dateToKey, calculateOccupancy, OfficeHours };
+export { run, dateToKey, calculateOccupancy, OfficeHours, DayOfWeek, debugPrintDays };
 
 const calendarName = 'adam.dubiel@allegro.pl';
 
+enum DayOfWeek { SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY };
+
 const startDate = date(2019, 4, 1);
-const endDate = date(2019, 4, 4);
+const endDate = date(2019, 4, 6);
+const workDays = [DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY];
 
 class OfficeHours {
     constructor(
         readonly from: number,
-        readonly to: number
+        readonly to: number,
+        readonly days: DayOfWeek[]
     ) {}
+
+    millisInWorkDay(): number {
+        return (this.to - this.from) * 60 * 60 * 1000
+    }
 }
 
 class DayStats {
     readonly date: string;
     readonly totalMillis: number;
-    occupiedMillis: number = 0;
+    private occupiedMillis: number = 0;
     numberOfEvents: number = 0;
     private lastRecordedEvent: Event;
 
     constructor(theDate: string, officeHours: OfficeHours) {
         this.date = theDate;
-        this.totalMillis = (officeHours.to - officeHours.from) * 60 * 60 * 1000;
+        this.totalMillis = officeHours.millisInWorkDay();
     }
 
     recordEvent(event: Event): void {
@@ -43,9 +51,119 @@ class DayStats {
         }
     }
 
-    occupiedPercent(): number {
-        return this.occupiedMillis / this.totalMillis;
+    occupiedTimeMillis(): number {
+        return this.capToWorkingDayDuration(this.occupiedMillis);
     }
+
+    occupiedPercent(): number {
+        return this.capToWorkingDayDuration(this.occupiedMillis) / this.totalMillis;
+    }
+
+    private capToWorkingDayDuration(millis: number): number {
+        return millis < this.totalMillis ? millis : this.totalMillis;
+    }
+}
+
+class PeriodStats {
+    private days: {[date: string]: DayStats} = {};
+    private numberOfDays = 0;
+    private readonly officeHours: OfficeHours;
+
+    constructor(theOfficeHours: OfficeHours){
+        this.officeHours = theOfficeHours;
+    };
+
+    recordEvent(event: Event): void {
+        let events: EventDay[];
+        if (event.isMultiDay()) {
+            events = this.splitMultiDayEvent(event);
+        } else {
+            events = [new EventDay(dateToKey(event.from), event)];
+        }
+
+        events.forEach(eventDay => {
+            if (this.isWorkDay(eventDay.event)) {
+                this.recordDayOfEvent(eventDay);
+            }
+        })
+    }
+
+    private splitMultiDayEvent(event: Event): EventDay[] {
+        let eventDays: EventDay[] = [];
+
+        let currentDate = new Date(event.from);
+        while (this.isBefore(currentDate, event.to)) {
+            let dateKey = dateToKey(currentDate);
+            eventDays.push(new EventDay(dateKey, event));
+            // + 1 day - this actually works with all corner cases 
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return eventDays;
+    }
+
+    private isBefore(date1: Date, date2: Date): boolean {
+        return date1.getFullYear() < date2.getFullYear()
+            || date1.getMonth() < date1.getMonth()
+            || date1.getDate() < date2.getDate();
+    }
+
+    private recordDayOfEvent(event: EventDay): void {
+        let dateKey = event.date;
+        let dayStats = this.days[dateKey];
+
+        if(!dayStats) {
+            dayStats = new DayStats(dateKey, this.officeHours);
+            this.days[dateKey] = dayStats;
+            this.numberOfDays++;
+        }
+        dayStats.recordEvent(event.event);
+    }
+
+    occupancy(): Occupancy {
+        let millisInPeriod = this.numberOfDays * this.officeHours.millisInWorkDay();
+        let occupiedMillisInPeriod = 0;
+        let daysOccupancy: DayOccupancy[] = [];
+
+        for (let date in this.days) {
+            let day = this.days[date];
+            occupiedMillisInPeriod += day.occupiedTimeMillis();
+            daysOccupancy.push(new DayOccupancy(
+                date, day.occupiedPercent(), day.numberOfEvents 
+            ));
+        }
+
+        return new Occupancy(
+            occupiedMillisInPeriod / millisInPeriod,
+            daysOccupancy
+        );
+    }
+
+    private isWorkDay(event: Event): boolean {
+        return this.officeHours.days.indexOf(event.from.getDay()) >= 0;
+    }
+}
+
+class EventDay {
+    constructor(
+        readonly date: string,
+        readonly event: Event
+    ) {};
+}
+
+class DayOccupancy {
+    constructor(
+        readonly date: string,
+        readonly occupancy: number,
+        readonly numberOfEvents: number
+    ){};
+}
+
+class Occupancy {
+    constructor(
+        readonly total: number,
+        readonly days: DayOccupancy[]
+    ){};
 }
 
 function run() {
@@ -53,26 +171,19 @@ function run() {
     
     debugPrintEvents(events);
 
-    let days = calculateOccupancy(events, new OfficeHours(8, 17));
+    let periodStats = calculateOccupancy(events, new OfficeHours(8, 17, workDays));
 
-    debugPrintDays(days);
+    debugPrintDays(periodStats);
 }
 
-function calculateOccupancy(events: Event[], officeHours: OfficeHours): {[date: string]: DayStats} {
-    let days: {[date: string]: DayStats} = {};
+function calculateOccupancy(events: Event[], officeHours: OfficeHours): PeriodStats {
+    let periodStats = new PeriodStats(officeHours);
 
     events.forEach(event => {
-        let dateKey = dateToKey(event.from);
-        let dayStats = days[dateKey];
-
-        if(!dayStats) {
-            dayStats = new DayStats(dateKey, officeHours);
-            days[dateKey] = dayStats;
-        }
-        dayStats.recordEvent(event);
+        periodStats.recordEvent(event);
     });
 
-    return days;
+    return periodStats;
 }
 
 function dateToKey(date: Date): string {
@@ -85,11 +196,14 @@ function debugPrintEvents(events: Event[]): void {
     });
 }
 
-function debugPrintDays(days: {[date: string]: DayStats}): void {
-    for (let key in days) {
-        let day = days[key];
-        console.log(`Day: ${day.date} ${day.numberOfEvents} ${day.occupiedPercent()}`);
-     }
+function debugPrintDays(stats: PeriodStats): void {
+    let occupancy = stats.occupancy();
+
+    console.log('==== PERIOD STATS ====');
+    console.log(`Total occupancy: ${occupancy.total}`);
+    occupancy.days.forEach(day => {
+        console.log(`Day: ${day.date} Occupancy: ${day.occupancy} Number Of Events: ${day.numberOfEvents}`);
+    });
 }
 
 function date(year: number, month: number, day: number): Date {

@@ -12,8 +12,30 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date): Ev
     
     let events: Event[] = [];
     gevents.forEach(e => {
-        events.push(new Event(e.getTitle(), e.getStartTime(), e.getEndTime(), EventType.REGULAR));
+        let myStatus = e.getMyStatus();
+        if (myStatus ==  CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER) {
+
+            let from: Date, to: Date;
+            if (e.isAllDayEvent()) {
+                from = e.getAllDayStartDate();
+                to = transformAllDayEventEndDate(e.getAllDayEndDate());
+            } else {
+                from = e.getStartTime();
+                to = e.getEndTime();
+            }
+
+            events.push(new Event(e.getTitle(), from, to, EventType.REGULAR));
+        }
     });
 
     return events;
+}
+
+function transformAllDayEventEndDate(date: Date): Date {
+    let transformed = new Date(date);
+    transformed.setHours(23);
+    transformed.setMinutes(59);
+    transformed.setSeconds(59);
+
+    return transformed;
 }
