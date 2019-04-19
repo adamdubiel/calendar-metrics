@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc"
   },
   "devDependencies": {
     "@google/clasp": "^2.0.1",
@@ -8,6 +9,10 @@
     "@types/jest": "^24.0.11",
     "jest": "^24.7.1",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.4.2"
+    "typescript": "^3.4.4"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.4.3",
+    "@babel/types": "^7.4.0"
   }
 }

@@ -1,8 +1,9 @@
 import { Event, EventType } from "./event";
+import { EventsFilter } from "./events-provider";
 
 export { extractEvents };
 
-function extractEvents(calendarName: string, startDate: Date, endDate: Date): Event[] {
+function extractEvents(calendarName: string, startDate: Date, endDate: Date, filter: EventsFilter): Event[] {
     let calendar = CalendarApp.getCalendarById(calendarName);
     console.log(`The calendar is named "${calendar.getName()}".`);
     
@@ -12,6 +13,10 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date): Ev
     
     let events: Event[] = [];
     gevents.forEach(e => {
+        if (filter.matches(e.getTitle())) {
+            return;
+        }
+
         let myStatus = e.getMyStatus();
         if (myStatus ==  CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER) {
 
