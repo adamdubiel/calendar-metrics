@@ -18,7 +18,7 @@
 * [x] filter only weekdays
 * [x] show occupancy for the whole week
 * [ ] ignore events without guests
-* [ ] add ability to filter out events based on regexes
+* [x] add ability to filter out events based on regexes
 * [ ] basic configuration
   * [ ] how to pass on confguration?
   * [ ] configure calendar
@@ -26,5 +26,5 @@
 
 ## TODO
 
-* [ ] check all-day events behaviour
+* [x] check all-day events behaviour
 * [ ] check number of guests (do I count as a guest)

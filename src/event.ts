@@ -1,7 +1,7 @@
 
-export enum EventType { REGULAR, OUT_OF_OFFICE };
+export enum EventType { REGULAR = "REGULER", OUT_OF_OFFICE = "OUT_OF_OFFICE" };
 
-export enum Overlap { NONE, PARTIAL, FULL };
+export enum Overlap { NONE = "NONE", PARTIAL = "PARTIAL", FULL = "FULL" };
 
 export class EventDifference {
     constructor(
@@ -9,6 +9,10 @@ export class EventDifference {
         readonly overlap: Overlap,
         readonly endsBefore: boolean
     ) {};
+
+    toString(): string {
+        return `EventDiff{minutes: ${this.differenceInMillis / 1000 / 60}, overlap: ${this.overlap}}`;
+    }
 }
 
 export class Event {
@@ -34,7 +38,10 @@ export class Event {
     }
 
     /**
-     * This method assumes that otther has started AFTER this event.
+     * This method assumes that other has started AFTER this event.
+     * 
+     * If there is no overlap, duration on other event is returned.
+     * 
      * @param other other event which started later
      */
     calculateDifference(other: Event): EventDifference {
@@ -43,7 +50,7 @@ export class Event {
 
         switch(overlap) {
             case Overlap.NONE: {
-                differenceInMillis = this.durationInMillis();
+                differenceInMillis = other.durationInMillis();
                 break;
             }
             case Overlap.FULL: {
@@ -94,5 +101,9 @@ export class Event {
         // --- F -- T -- OF -- OT --->
         // --- F -- T OF ----- OT --->
         return Overlap.NONE;
+    }
+
+    toString(): string {
+        return `Event{title: ${this.title}, from: ${this.from}, to: ${this.to}}`;
     }
 }

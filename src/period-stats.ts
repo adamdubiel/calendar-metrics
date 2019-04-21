@@ -1,4 +1,5 @@
 import { Event } from "./event";
+import { log } from "./logger";
 
 export { dateToKey, OfficeHours, DayOfWeek, PeriodStats };
 
@@ -29,10 +30,15 @@ class DayStats {
     }
 
     recordEvent(event: Event): void {
+        log().debug(`DayStats[${this.date}] | record | ${event.title} | ${event}`);
+        log().debug(`DayStats[${this.date}] | occupiedMinutesBefore | ${event.title} | ${this.occupiedMillis / 1000 / 60}`);
+        log().debug(`DayStats[${this.date}] | durationMinutes | ${event.title} | ${event.durationInMillis() / 1000 / 60}`);
         this.numberOfEvents++;
 
         if (this.lastRecordedEvent) {
             let diff = this.lastRecordedEvent.calculateDifference(event);
+            log().debug(`DayStats[${this.date}] | difference | ${event.title} | ${diff}`);
+
             this.occupiedMillis += diff.differenceInMillis;
             if (diff.endsBefore) {
                 this.lastRecordedEvent = event;
@@ -41,6 +47,8 @@ class DayStats {
             this.occupiedMillis += event.durationInMillis();
             this.lastRecordedEvent = event;
         }
+
+        log().debug(`DayStats[${this.date}] | occupiedMinutesAfter | ${event.title} | ${this.occupiedMillis / 1000 / 60}`);
     }
 
     occupiedTimeMillis(): number {
@@ -119,18 +127,23 @@ class PeriodStats {
     occupancy(): Occupancy {
         let millisInPeriod = this.numberOfDays * this.officeHours.millisInWorkDay();
         let occupiedMillisInPeriod = 0;
+        let numberOfEventsInPeriod = 0;
         let daysOccupancy: DayOccupancy[] = [];
 
         for (let date in this.days) {
             let day = this.days[date];
             occupiedMillisInPeriod += day.occupiedTimeMillis();
+            numberOfEventsInPeriod += day.numberOfEvents;
+
             daysOccupancy.push(new DayOccupancy(
-                date, day.occupiedPercent(), day.numberOfEvents 
+                date, day.occupiedPercent(), day.occupiedTimeMillis(), day.numberOfEvents 
             ));
         }
 
         return new Occupancy(
             occupiedMillisInPeriod / millisInPeriod,
+            occupiedMillisInPeriod,
+            numberOfEventsInPeriod,
             daysOccupancy
         );
     }
@@ -151,6 +164,7 @@ class DayOccupancy {
     constructor(
         readonly date: string,
         readonly occupancy: number,
+        readonly millis: number,
         readonly numberOfEvents: number
     ){};
 }
@@ -158,6 +172,8 @@ class DayOccupancy {
 class Occupancy {
     constructor(
         readonly total: number,
+        readonly totalMillis: number,
+        readonly numberOfEvents: number,
         readonly days: DayOccupancy[]
     ){};
 }

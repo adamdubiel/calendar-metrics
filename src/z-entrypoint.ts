@@ -6,7 +6,7 @@ import { run, Config } from "./calendar-metrics"
 const calendarName = 'adam.dubiel@allegro.pl';
 
 const startDate = date(2019, 4, 15);
-const endDate = date(2019, 4, 19);
+const endDate = date(2019, 4, 20);
 
 const officeHoursStart = 8;
 const officeHoursEnd = 17;

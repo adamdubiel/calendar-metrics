@@ -1,27 +1,33 @@
 import { Event, EventType } from "./event";
 import { EventsFilter } from "./events-provider";
+import { log } from "./logger";
 
 export { extractEvents };
 
 function extractEvents(calendarName: string, startDate: Date, endDate: Date, filter: EventsFilter): Event[] {
     let calendar = CalendarApp.getCalendarById(calendarName);
-    console.log(`The calendar is named "${calendar.getName()}".`);
+    log().info(`GCalendar[${calendar.getName()}] | readEvents | from: ${startDate} to: ${endDate}`);
     
     let gevents = calendar.getEvents(startDate, endDate);
    
-    console.log(`Returned ${gevents.length} events`);
+    log().info(`GCalendar[${calendar.getName()}] | eventsCount | ${gevents.length}`);
     
     let events: Event[] = [];
     gevents.forEach(e => {
         if (filter.matches(e.getTitle())) {
-            console.log(`Event: ${e.getTitle()} did not match`);
+            log().debug(`GCalendar[${calendar.getName()}] | filter | ${e.getTitle()}`);
             return;
         }
 
         let myStatus = e.getMyStatus();
-        console.log(`Event: ${e.getTitle()} has status: ${myStatus}`);
-        if (myStatus ==  CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER) {
 
+        let attending = myStatus == CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER;
+        let soloMeeting = myStatus == CalendarApp.GuestStatus.OWNER && e.getGuestList(false).length == 0;
+
+        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | status: ${myStatus} guests: ${e.getGuestList(false).length}`);
+        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | onlyGuestAndOwner: ${soloMeeting} attending: ${attending}`);
+
+        if (attending && !soloMeeting) {
             let from: Date, to: Date;
             if (e.isAllDayEvent()) {
                 from = e.getAllDayStartDate();
@@ -31,7 +37,12 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
                 to = e.getEndTime();
             }
 
-            events.push(new Event(e.getTitle(), from, to, EventType.REGULAR));
+            let event = new Event(e.getTitle(), from, to, EventType.REGULAR);
+            events.push(event);
+            
+            log().debug(`GCalendar[${calendar.getName()}] | added | ${event}`);
+        } else {
+            log().debug(`GCalendar[${calendar.getName()}] | filter | ${e.getTitle()} | attending && !onlyGuestAndOwner: false`);
         }
     });
 

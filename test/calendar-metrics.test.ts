@@ -2,6 +2,7 @@ import { extractAndPresent, Config } from "../src/calendar-metrics";
 import { e } from "./event.test";
 import { Event } from "../src/event";
 import { EventsProvider, EventsFilter } from "../src/events-provider";
+import { DayOfWeek } from "../src/period-stats";
 
 class StaticEventsProvider implements EventsProvider {
     constructor(
@@ -43,5 +44,12 @@ test('real case', () => {
         e('Onboarding Tech Day 2', '2019-04-05T08:30', '2019-04-05T14:30')
     ]);
 
-    extractAndPresent(eventsProvider, new Config('a', new Date(), new Date(), [], 1, 1, []));
+    let workDays = [
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY
+    ];
+    extractAndPresent(eventsProvider, new Config('a', new Date(), new Date(), [], 8, 17, workDays));
 });

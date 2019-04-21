@@ -2,6 +2,7 @@ import { Event } from "./event";
 import { extractEvents } from "./gcalendar-extractor";
 import { EventsProvider, EventsFilter } from "./events-provider";
 import { DayOfWeek, OfficeHours, PeriodStats } from "./period-stats";
+import { log } from "./logger";
 
 export { run, extractAndPresent, Config };
 
@@ -53,16 +54,20 @@ function calculateOccupancy(events: Event[], officeHours: OfficeHours): PeriodSt
 
 function debugPrintEvents(events: Event[]): void {
     events.forEach(event => {
-        console.log(`Event details: name: ${event.title}, from ${event.from} to ${event.to}`);
+        log().debug(`PrintEvents | ${event}`);
     });
 }
 
 function debugPrintDays(stats: PeriodStats): void {
     let occupancy = stats.occupancy();
 
-    console.log('==== PERIOD STATS ====');
-    console.log(`Total occupancy: ${occupancy.total}`);
+    log().debug('PrintStats | ==== PERIOD STATS ====');
+    log().debug(`PrintStats | occupancy | ${percent(occupancy.total)}% | minutes: ${occupancy.totalMillis / 1000 / 60}, numberOfEvents: ${occupancy.numberOfEvents}`);
     occupancy.days.forEach(day => {
-        console.log(`Day: ${day.date} Occupancy: ${day.occupancy} Number Of Events: ${day.numberOfEvents}`);
+        log().debug(`PrintStats | day: ${day.date} | ${percent(day.occupancy)}% | minutes: ${day.millis / 1000 / 60}, numberOfEvents: ${day.numberOfEvents}`);
     });
+}
+
+function percent(n: number) {
+    return (n * 100).toFixed(1);
 }

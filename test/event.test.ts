@@ -9,25 +9,25 @@ function date(date: string): Date {
 }
 
 describe('calculateDifferenceInMillis', () => {
-    test('returns duration of this event if there is no overlap', () => {
+    test('returns duration of other event if there is no overlap', () => {
         let event1 = e('#1', '2019-04-01T08:00', '2019-04-01T09:00');
-        let event2 = e('#2', '2019-04-01T10:00', '2019-04-01T11:00');
+        let event2 = e('#2', '2019-04-01T10:00', '2019-04-01T11:30');
 
         let diff = event1.calculateDifference(event2);
 
         expect(diff.overlap).toBe(Overlap.NONE);
-        expect(diff.differenceInMillis).toBe(1 * 60 * 60 * 1000);
+        expect(diff.differenceInMillis).toBe(1.5 * 60 * 60 * 1000);
         expect(diff.endsBefore).toBe(true);
     });
 
-    test('returns duration of this event if there is no overlap and #2 starts when #1 ends', () => {
+    test('returns duration of other event if there is no overlap and #2 starts when #1 ends', () => {
         let event1 = e('#1', '2019-04-01T08:00', '2019-04-01T09:00');
-        let event2 = e('#2', '2019-04-01T09:00', '2019-04-01T10:00');
+        let event2 = e('#2', '2019-04-01T09:00', '2019-04-01T13:00');
 
         let diff = event1.calculateDifference(event2);
 
         expect(diff.overlap).toBe(Overlap.NONE);
-        expect(diff.differenceInMillis).toBe(1 * 60 * 60 * 1000);
+        expect(diff.differenceInMillis).toBe(4 * 60 * 60 * 1000);
         expect(diff.endsBefore).toBe(true);
     });
 
