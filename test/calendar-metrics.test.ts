@@ -1,4 +1,4 @@
-import { extractAndPresent } from "../src/calendar-metrics";
+import { extractAndPresent, Config } from "../src/calendar-metrics";
 import { e } from "./event.test";
 import { Event } from "../src/event";
 import { EventsProvider, EventsFilter } from "../src/events-provider";
@@ -43,5 +43,5 @@ test('real case', () => {
         e('Onboarding Tech Day 2', '2019-04-05T08:30', '2019-04-05T14:30')
     ]);
 
-    extractAndPresent(eventsProvider);
+    extractAndPresent(eventsProvider, new Config('a', new Date(), new Date(), [], 1, 1, []));
 });

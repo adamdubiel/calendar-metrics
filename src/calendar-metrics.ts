@@ -3,36 +3,7 @@ import { extractEvents } from "./gcalendar-extractor";
 import { EventsProvider, EventsFilter } from "./events-provider";
 import { DayOfWeek, OfficeHours, PeriodStats } from "./period-stats";
 
-export { run, extractAndPresent };
-
-
-/** EXECUTION PARAMETERS **/
-
-const calendarName = 'adam.dubiel@allegro.pl';
-
-const startDate = date(2019, 4, 15);
-const endDate = date(2019, 4, 19);
-
-const officeHourStart = 8;
-const officeHourEnd = 17;
-
-const filters = [
-    "^Stay at"
-];
-
-const workDays = [
-    DayOfWeek.MONDAY,
-    DayOfWeek.TUESDAY,
-    DayOfWeek.WEDNESDAY,
-    DayOfWeek.THURSDAY,
-    DayOfWeek.FRIDAY
-];
-
-/** EOF EXECUTION PARAMETERS **/
-
-function date(year: number, month: number, day: number): Date {
-    return new Date(year, month - 1, day);
-}
+export { run, extractAndPresent, Config };
 
 class GCalendarEventsProvider implements EventsProvider {
     extractEvents(calendarName: string, from: Date, to: Date, filter: EventsFilter): Event[] {
@@ -40,17 +11,29 @@ class GCalendarEventsProvider implements EventsProvider {
     }
 }
 
-function run() {
-    let eventsProvider = new GCalendarEventsProvider();
-    extractAndPresent(eventsProvider);
+class Config {
+    constructor(
+        readonly calendarName: string,
+        readonly startDate: Date,
+        readonly endDate: Date,
+        readonly filters: string[],
+        readonly officeHoursStart: number,
+        readonly officeHoursEnd: number,
+        readonly workDays: DayOfWeek[]
+    ) {};
 }
 
-function extractAndPresent(provider: EventsProvider): void {
-    let events = provider.extractEvents(calendarName, startDate, endDate, new EventsFilter(filters));
+function run(config: Config) {
+    let eventsProvider = new GCalendarEventsProvider();
+    extractAndPresent(eventsProvider, config);
+}
+
+function extractAndPresent(provider: EventsProvider, config: Config): void {
+    let events = provider.extractEvents(config.calendarName, config.startDate, config.endDate, new EventsFilter(config.filters));
     
     debugPrintEvents(events);
 
-    let periodStats = calculateOccupancy(events, new OfficeHours(officeHourStart, officeHourEnd, workDays));
+    let periodStats = calculateOccupancy(events, new OfficeHours(config.officeHoursStart, config.officeHoursEnd, config.workDays));
 
     debugPrintDays(periodStats);
 }

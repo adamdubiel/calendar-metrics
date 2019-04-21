@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
     "experimentalDecorators": true,
     "module": "es2015",
     "outDir": "./dist/"

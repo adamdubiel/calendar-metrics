@@ -13,11 +13,13 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
     
     let events: Event[] = [];
     gevents.forEach(e => {
-        if (filter.matches(e.getTitle())) {
-            return;
-        }
+        // if (filter.matches(e.getTitle())) {
+        //     console.log(`Event: ${e.getTitle()} did not match`);
+        //     return;
+        // }
 
         let myStatus = e.getMyStatus();
+        console.log(`Event: ${e.getTitle()} has status: ${myStatus}`);
         if (myStatus ==  CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER) {
 
             let from: Date, to: Date;
