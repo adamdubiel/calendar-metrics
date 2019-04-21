@@ -29,11 +29,17 @@ function run(config: Config) {
 }
 
 function extractAndPresent(provider: EventsProvider, config: Config): void {
-    let events = provider.extractEvents(config.calendarName, config.startDate, config.endDate, new EventsFilter(config.filters));
+    let events = provider.extractEvents(
+        config.calendarName,
+        config.startDate,
+        config.endDate,
+        new EventsFilter(config.filters)
+    );
     
     debugPrintEvents(events);
 
-    let periodStats = calculateOccupancy(events, new OfficeHours(config.officeHoursStart, config.officeHoursEnd, config.workDays));
+    let officeHours = new OfficeHours(config.officeHoursStart, config.officeHoursEnd, config.workDays);
+    let periodStats = calculateOccupancy(events, officeHours);
 
     debugPrintDays(periodStats);
 }
@@ -47,7 +53,7 @@ function calculateOccupancy(events: Event[], officeHours: OfficeHours): PeriodSt
 
 function debugPrintEvents(events: Event[]): void {
     events.forEach(event => {
-        console.log(`Event details: name: ${event.title}, from ${event.from} to ${event.to}`)        
+        console.log(`Event details: name: ${event.title}, from ${event.from} to ${event.to}`);
     });
 }
 

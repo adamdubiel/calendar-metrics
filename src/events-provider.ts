@@ -12,8 +12,8 @@ class EventsFilter {
     ) {}
 
     matches(title: string): boolean {
-        for (let r in this.regexps) {
-            if (title.match(title) != null) {
+        for (let r of this.regexps) {
+            if (title.match(r) != null) {
                 return true;
             }
         }
