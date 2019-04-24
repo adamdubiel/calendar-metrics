@@ -14,7 +14,7 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
     
     let events: Event[] = [];
     gevents.forEach(e => {
-        if (filter.matches(e.getTitle())) {
+        if (filter.isBlacklisted(e.getTitle())) {
             log().debug(`GCalendar[${calendar.getName()}] | filter | ${e.getTitle()}`);
             return;
         }

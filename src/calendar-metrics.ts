@@ -34,7 +34,7 @@ function extractAndPresent(provider: EventsProvider, config: Config): void {
         config.calendarName,
         config.startDate,
         config.endDate,
-        new EventsFilter(config.filters)
+        new EventsFilter(config.filters, [])
     );
     
     debugPrintEvents(events);
