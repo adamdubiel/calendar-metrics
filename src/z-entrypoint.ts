@@ -5,14 +5,18 @@ import { run, Config } from "./calendar-metrics"
 
 const calendarName = 'adam.dubiel@allegro.pl';
 
-const startDate = date(2019, 4, 15);
-const endDate = date(2019, 4, 20);
+const startDate = date(2019, 1, 15);
+const endDate = date(2019, 2, 28);
 
 const officeHoursStart = 8;
 const officeHoursEnd = 17;
 
-const filters = [
-    "^Stay at"
+const blacklistFilters = [
+    "^Stay at", "^Flight to"
+];
+
+const whitelistFilters = [
+    "is out of office till"
 ];
 
 const workDays = [
@@ -34,7 +38,7 @@ function runZEntrypoint() {
         calendarName,
         startDate,
         endDate,
-        filters,
+        blacklistFilters,
         officeHoursStart,
         officeHoursEnd,
         workDays

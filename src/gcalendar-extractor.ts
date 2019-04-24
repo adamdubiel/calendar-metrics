@@ -22,10 +22,10 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
         let myStatus = e.getMyStatus();
 
         let attending = myStatus == CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER;
-        let soloMeeting = myStatus == CalendarApp.GuestStatus.OWNER && e.getGuestList(false).length == 0;
+        let soloMeeting = myStatus == CalendarApp.GuestStatus.OWNER && e.getGuestList().length == 0;
 
-        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | status: ${myStatus} guests: ${e.getGuestList(false).length}`);
-        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | onlyGuestAndOwner: ${soloMeeting} attending: ${attending}`);
+        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | status: ${myStatus}, guests: ${e.getGuestList().length}, isOwner: ${e.isOwnedByMe()}`);
+        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | onlyGuestAndOwner: ${soloMeeting}, attending: ${attending}`);
 
         if (attending && !soloMeeting) {
             let from: Date, to: Date;
@@ -51,6 +51,7 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
 
 function transformAllDayEventEndDate(date: Date): Date {
     let transformed = new Date(date);
+    transformed.setDate(date.getDate() - 1);
     transformed.setHours(23);
     transformed.setMinutes(59);
     transformed.setSeconds(59);
