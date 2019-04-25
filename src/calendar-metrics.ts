@@ -11,7 +11,8 @@ class Config {
         readonly calendarName: string,
         readonly startDate: Date,
         readonly endDate: Date,
-        readonly filters: string[],
+        readonly blacklistFilters: string[],
+        readonly whitelistFilters: string[], 
         readonly officeHoursStart: number,
         readonly officeHoursEnd: number,
         readonly workDays: DayOfWeek[]
@@ -20,7 +21,9 @@ class Config {
 
 function run(config: Config) {
     let repository = new GCalendarEventsRepository();
-    extractAndPresent(new EventsProvider(repository, new EventsFilter(config.filters, [])), config);
+    let filter = new EventsFilter(config.blacklistFilters, config.whitelistFilters);
+    let provider = new EventsProvider(repository, filter);
+    extractAndPresent(provider, config);
 }
 
 function extractAndPresent(provider: EventsProvider, config: Config): void {
@@ -33,14 +36,14 @@ function extractAndPresent(provider: EventsProvider, config: Config): void {
     debugPrintEvents(events);
 
     let officeHours = new OfficeHours(config.officeHoursStart, config.officeHoursEnd, config.workDays);
-    let periodStats = calculateOccupancy(events, officeHours);
+    let periodStats = calculateOccupancy(config.startDate, config.endDate, events, officeHours);
 
     debugPrintDays(periodStats);
 }
 
-function calculateOccupancy(events: Event[], officeHours: OfficeHours): PeriodStats {
+function calculateOccupancy(from: Date, to: Date, events: Event[], officeHours: OfficeHours): PeriodStats {
     let periodStats = new PeriodStats(officeHours);
-    periodStats.recordEvents(events);
+    periodStats.recordEvents(from, to, events);
 
     return periodStats;
 }
@@ -59,6 +62,7 @@ function debugPrintDays(stats: PeriodStats): void {
     occupancy.days.forEach(day => {
         log().debug(`PrintStats | day: ${day.date} | ${percent(day.occupancy)}% | minutes: ${day.millis / 1000 / 60}, numberOfEvents: ${day.numberOfEvents}`);
     });
+    log().debug('PrintStats | ==== DONE ====');
 }
 
 function percent(n: number) {

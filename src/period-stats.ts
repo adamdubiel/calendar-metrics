@@ -19,13 +19,15 @@ class OfficeHours {
 
 class DayStats {
     readonly date: string;
+    readonly workDay: boolean;
     readonly totalMillis: number;
     private occupiedMillis: number = 0;
     numberOfEvents: number = 0;
     private lastRecordedEvent: Event;
 
-    constructor(theDate: string, officeHours: OfficeHours) {
+    constructor(theDate: string, theWorkDay: boolean, officeHours: OfficeHours) {
         this.date = theDate;
+        this.workDay = theWorkDay;
         this.totalMillis = officeHours.millisInWorkDay();
     }
 
@@ -56,6 +58,9 @@ class DayStats {
     }
 
     occupiedPercent(): number {
+        if (this.totalMillis == 0) {
+            return 0;
+        }
         return this.capToWorkingDayDuration(this.occupiedMillis) / this.totalMillis;
     }
 
@@ -66,29 +71,43 @@ class DayStats {
 
 class PeriodStats {
     private days: {[date: string]: DayStats} = {};
-    private numberOfDays = 0;
     private readonly officeHours: OfficeHours;
 
     constructor(theOfficeHours: OfficeHours){
         this.officeHours = theOfficeHours;
     };
 
-    recordEvents(events: Event[]): void {
+    recordEvents(from: Date, to: Date, events: Event[]): void {
+        this.fillInDayStats(from, to);
         events.forEach(e => { this.recordEvent(e); });
     }
 
+    private fillInDayStats(from: Date, to: Date) {
+        let current = new Date(from);
+        while (this.isBefore(current, to)) {    
+            let dateKey = dateToKey(current);
+
+            this.days[dateKey] = new DayStats(dateKey, this.isWorkDayDate(current), this.officeHours);
+            log().debug(`PeriodStats[${dateKey}] | fillInDays`);
+
+            // + 1 day - this actually works with all corner cases 
+            current.setDate(current.getDate() + 1);
+        }
+    }
+
     recordEvent(event: Event): void {
+        log().debug(`PeriodStats[${event.title}] | record | multiday: ${event.isMultiDay()}`);
+
         let events: EventDay[];
         if (event.isMultiDay()) {
             events = this.splitMultiDayEvent(event);
+            log().debug(`PeriodStats[${event.title}] | splitMultiDay | from: ${event.from}, to: ${event.to} | days: ${events.length}`);
         } else {
             events = [new EventDay(dateToKey(event.from), event)];
         }
 
         events.forEach(eventDay => {
-            if (this.isWorkDay(eventDay.event)) {
                 this.recordDayOfEvent(eventDay);
-            }
         })
     }
 
@@ -108,7 +127,7 @@ class PeriodStats {
 
     private isBefore(date1: Date, date2: Date): boolean {
         return date1.getFullYear() < date2.getFullYear()
-            || date1.getMonth() < date1.getMonth()
+            || date1.getMonth() < date2.getMonth()
             || date1.getDate() < date2.getDate();
     }
 
@@ -116,30 +135,31 @@ class PeriodStats {
         let dateKey = event.date;
         let dayStats = this.days[dateKey];
 
-        if(!dayStats) {
-            dayStats = new DayStats(dateKey, this.officeHours);
-            this.days[dateKey] = dayStats;
-            this.numberOfDays++;
-        }
+        log().debug(`PeriodStats[${event.event.title}] | recordDayOfEvent | dateKey: ${dateKey}`);
+
         dayStats.recordEvent(event.event);
     }
 
     occupancy(): Occupancy {
-        let millisInPeriod = this.numberOfDays * this.officeHours.millisInWorkDay();
+        let numberOfWorkDays = 0;
         let occupiedMillisInPeriod = 0;
         let numberOfEventsInPeriod = 0;
         let daysOccupancy: DayOccupancy[] = [];
 
         for (let date in this.days) {
             let day = this.days[date];
-            occupiedMillisInPeriod += day.occupiedTimeMillis();
-            numberOfEventsInPeriod += day.numberOfEvents;
+            if (day.workDay) {
+                occupiedMillisInPeriod += day.occupiedTimeMillis();
+                numberOfEventsInPeriod += day.numberOfEvents;
+                numberOfWorkDays++;
+            }
 
             daysOccupancy.push(new DayOccupancy(
-                date, day.occupiedPercent(), day.occupiedTimeMillis(), day.numberOfEvents 
+                date, day.workDay, day.occupiedPercent(), day.occupiedTimeMillis(), day.numberOfEvents 
             ));
         }
 
+        let millisInPeriod = numberOfWorkDays * this.officeHours.millisInWorkDay();
         return new Occupancy(
             occupiedMillisInPeriod / millisInPeriod,
             occupiedMillisInPeriod,
@@ -148,8 +168,8 @@ class PeriodStats {
         );
     }
 
-    private isWorkDay(event: Event): boolean {
-        return this.officeHours.days.indexOf(event.from.getDay()) >= 0;
+    private isWorkDayDate(date: Date): boolean {
+        return this.officeHours.days.indexOf(date.getDay()) >= 0;
     }
 }
 
@@ -163,6 +183,7 @@ class EventDay {
 class DayOccupancy {
     constructor(
         readonly date: string,
+        readonly isWorkDay: boolean,
         readonly occupancy: number,
         readonly millis: number,
         readonly numberOfEvents: number

@@ -1,12 +1,7 @@
 # CalendarMetrics
 
-## How to run
-
-* install [clasp](https://github.com/google/clasp)
-* open [GSuite Developer Hub](https://script.google.com/home/projects/)
-* select & open project
-* `clasp push`
-* run function
+Simple Google Apps Script that reads data from Google Calendar for defined dates and
+creates statistics about % of time spent on meetings.
 
 ## Features
 
@@ -20,15 +15,20 @@
 * [x] ignore events without guests
 * [x] add ability to filter out events based on regexes
 * [x] add ability to whitelist events based on regexes
+* [ ] show all days, not only those with events
+  * [ ] count period occupancy using only work days
 * [ ] basic configuration
   * [ ] how to pass on confguration?
   * [ ] configure calendar
   * [ ] configure time range
-
-## TODO
-
-* [x] check all-day events behaviour
-* [x] check number of guests (do I count as a guest)
+* [ ] meeting types histogram
+  * [ ] configure categories by meeting title
+  * [ ] special category: recurriing events
+* [ ] aggregate multiple calendars
+* spreadsheets output
+  * [ ] dump data to spreadsheet
+  * [ ] detect existing dates
+  * [ ] create new sheet per quarter (?)
 
 ## Gotchas
 
@@ -37,3 +37,17 @@ You can be the owner of the event, but not an organiser. If so, you count
 as a guest.
 
 Being organiser and being an owner is indistinguishible on API level.
+
+## How to run for development
+
+* install [clasp](https://github.com/google/clasp)
+* open [GSuite Developer Hub](https://script.google.com/home/projects/)
+* select & open project
+* `clasp push`
+* run function
+
+### Test
+
+```
+npm test
+```

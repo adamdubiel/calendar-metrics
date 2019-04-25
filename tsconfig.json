@@ -3,7 +3,7 @@
     "lib": ["esnext", "dom"],
     "experimentalDecorators": true,
     "module": "es2015",
-    "outDir": "./dist/"
+    "outDir": "./dist/",
   },
   "rootDir": "src",
   "include": ["./src/**/*"]

@@ -1,7 +1,7 @@
 import { EventsRepository, RawEvent } from "./events-provider";
 import { log } from "./logger";
 
-export { GCalendarEventsRepository };
+export { GCalendarEventsRepository, dumpEvents, changeTimezone };
 
 class GCalendarEventsRepository implements EventsRepository {
     extractEvents(calendarName: string, from: Date, to: Date): RawEvent[] {
@@ -33,11 +33,31 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date): Ra
             to = e.getEndTime();
         }
         
-        let event = new RawEvent(e.getTitle(), from ,to, e.getGuestList().length, attending, organising);
+        let event = new RawEvent(
+            e.getTitle(), 
+            changeTimezone(from),
+            changeTimezone(to),
+            e.getGuestList().length,
+            attending,
+            organising
+        );
+        events.push(event);
         log().debug(`GCalendar[${calendar.getName()}] | rawEvent | ${event}`);
     });
 
     return events;
+}
+
+/**
+ * This functioni tries to change dates from UTC (as returned by GCalendar) to
+ * calendars' Time Zone.
+ * 
+ * @param date 
+ */
+function changeTimezone(date: Date): Date {
+    let transformed = new Date(date);
+    transformed.setMinutes(transformed.getMinutes() + -1 * date.getTimezoneOffset());
+    return transformed;
 }
 
 function transformAllDayEventEndDate(date: Date): Date {
@@ -48,4 +68,13 @@ function transformAllDayEventEndDate(date: Date): Date {
     transformed.setSeconds(59);
 
     return transformed;
+}
+
+function dumpEvents(calendarName: string, startDate: Date, endDate: Date) {
+    log().info(`dumpEvents[${calendarName}] | readEvents | from: ${startDate} to: ${endDate}`);
+    
+    let events = extractEvents(calendarName, startDate, endDate);
+    log().info(JSON.stringify(events));
+
+    log().info(`dumpEvents[${calendarName}] | done`);
 }

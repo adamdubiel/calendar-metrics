@@ -31,12 +31,12 @@ class EventsProvider {
 
     constructor(
         readonly repository: EventsRepository,
-        readonly filter: EventsFilter
+        readonly filter: EventsFilter,
     ) {};
 
     extractEvents(calendarName: string, from: Date, to: Date): Event[] {
         let rawEvents = this.repository.extractEvents(calendarName, from, to);
-        let events: Event[] = []
+        let events: Event[] = [];
 
         rawEvents.forEach(event => {
             let whitelisted = this.filter.isWhitelisted(event.title);
