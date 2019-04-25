@@ -1,10 +1,15 @@
-import { Event, EventType } from "./event";
-import { EventsFilter } from "./events-provider";
+import { EventsRepository, RawEvent } from "./events-provider";
 import { log } from "./logger";
 
-export { extractEvents };
+export { GCalendarEventsRepository };
 
-function extractEvents(calendarName: string, startDate: Date, endDate: Date, filter: EventsFilter): Event[] {
+class GCalendarEventsRepository implements EventsRepository {
+    extractEvents(calendarName: string, from: Date, to: Date): RawEvent[] {
+        return extractEvents(calendarName, from, to);
+    }
+}
+
+function extractEvents(calendarName: string, startDate: Date, endDate: Date): RawEvent[] {
     let calendar = CalendarApp.getCalendarById(calendarName);
     log().info(`GCalendar[${calendar.getName()}] | readEvents | from: ${startDate} to: ${endDate}`);
     
@@ -12,38 +17,24 @@ function extractEvents(calendarName: string, startDate: Date, endDate: Date, fil
    
     log().info(`GCalendar[${calendar.getName()}] | eventsCount | ${gevents.length}`);
     
-    let events: Event[] = [];
+    let events: RawEvent[] = [];
     gevents.forEach(e => {
-        if (filter.isBlacklisted(e.getTitle())) {
-            log().debug(`GCalendar[${calendar.getName()}] | filter | ${e.getTitle()}`);
-            return;
-        }
-
         let myStatus = e.getMyStatus();
 
         let attending = myStatus == CalendarApp.GuestStatus.YES || myStatus == CalendarApp.GuestStatus.OWNER;
-        let soloMeeting = myStatus == CalendarApp.GuestStatus.OWNER && e.getGuestList().length == 0;
+        let organising = myStatus == CalendarApp.GuestStatus.OWNER;
 
-        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | status: ${myStatus}, guests: ${e.getGuestList().length}, isOwner: ${e.isOwnedByMe()}`);
-        log().debug(`GCalendar[${calendar.getName()}] | event | ${e.getTitle()} | onlyGuestAndOwner: ${soloMeeting}, attending: ${attending}`);
-
-        if (attending && !soloMeeting) {
-            let from: Date, to: Date;
-            if (e.isAllDayEvent()) {
-                from = e.getAllDayStartDate();
-                to = transformAllDayEventEndDate(e.getAllDayEndDate());
-            } else {
-                from = e.getStartTime();
-                to = e.getEndTime();
-            }
-
-            let event = new Event(e.getTitle(), from, to, EventType.REGULAR);
-            events.push(event);
-            
-            log().debug(`GCalendar[${calendar.getName()}] | added | ${event}`);
+        let from: Date, to: Date;
+        if (e.isAllDayEvent()) {
+            from = e.getAllDayStartDate();
+            to = transformAllDayEventEndDate(e.getAllDayEndDate());
         } else {
-            log().debug(`GCalendar[${calendar.getName()}] | filter | ${e.getTitle()} | attending && !onlyGuestAndOwner: false`);
+            from = e.getStartTime();
+            to = e.getEndTime();
         }
+        
+        let event = new RawEvent(e.getTitle(), from ,to, e.getGuestList().length, attending, organising);
+        log().debug(`GCalendar[${calendar.getName()}] | rawEvent | ${event}`);
     });
 
     return events;

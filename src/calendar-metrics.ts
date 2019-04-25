@@ -1,16 +1,12 @@
 import { Event } from "./event";
-import { extractEvents } from "./gcalendar-extractor";
-import { EventsProvider, EventsFilter } from "./events-provider";
+import { GCalendarEventsRepository } from "./gcalendar-extractor";
+import { EventsProvider, EventsFilter, EventsRepository } from "./events-provider";
 import { DayOfWeek, OfficeHours, PeriodStats } from "./period-stats";
 import { log } from "./logger";
 
 export { run, extractAndPresent, Config };
 
-class GCalendarEventsProvider implements EventsProvider {
-    extractEvents(calendarName: string, from: Date, to: Date, filter: EventsFilter): Event[] {
-        return extractEvents(calendarName, from, to, filter);
-    }
-}
+
 
 class Config {
     constructor(
@@ -25,8 +21,8 @@ class Config {
 }
 
 function run(config: Config) {
-    let eventsProvider = new GCalendarEventsProvider();
-    extractAndPresent(eventsProvider, config);
+    let repository = new GCalendarEventsRepository();
+    extractAndPresent(new EventsProvider(repository, new EventsFilter(config.filters, [])), config);
 }
 
 function extractAndPresent(provider: EventsProvider, config: Config): void {
@@ -34,7 +30,6 @@ function extractAndPresent(provider: EventsProvider, config: Config): void {
         config.calendarName,
         config.startDate,
         config.endDate,
-        new EventsFilter(config.filters, [])
     );
     
     debugPrintEvents(events);

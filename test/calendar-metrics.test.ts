@@ -1,15 +1,17 @@
 import { extractAndPresent, Config } from "../src/calendar-metrics";
 import { e } from "./event.test";
 import { Event } from "../src/event";
-import { EventsProvider, EventsFilter } from "../src/events-provider";
+import { EventsProvider } from "../src/events-provider";
 import { DayOfWeek } from "../src/period-stats";
 
-class StaticEventsProvider implements EventsProvider {
+class StaticEventsProvider extends EventsProvider {
     constructor(
         readonly events: Event[]
-    ) {};
+    ) {
+        super(null, null);
+    };
 
-    extractEvents(calendarName: string, from: Date, to: Date, filter: EventsFilter): Event[] {
+    extractEvents(calendarName: string, from: Date, to: Date): Event[] {
         return this.events;
     }
 }
