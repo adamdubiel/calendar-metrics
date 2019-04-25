@@ -1,12 +1,10 @@
 import { Event } from "./event";
-import { GCalendarEventsRepository } from "./gcalendar-extractor";
-import { EventsProvider, EventsFilter, EventsRepository } from "./events-provider";
+import { GCalendarEventsRepository } from "./gcalendar-repository";
+import { EventsProvider, EventsFilter } from "./events-provider";
 import { DayOfWeek, OfficeHours, PeriodStats } from "./period-stats";
 import { log } from "./logger";
 
 export { run, extractAndPresent, Config };
-
-
 
 class Config {
     constructor(
