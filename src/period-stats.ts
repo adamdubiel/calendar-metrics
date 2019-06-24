@@ -88,14 +88,13 @@ class PeriodStats {
             let dateKey = dateToKey(current);
 
             this.days[dateKey] = new DayStats(dateKey, this.isWorkDayDate(current), this.officeHours);
-            log().debug(`PeriodStats[${dateKey}] | fillInDays`);
 
             // + 1 day - this actually works with all corner cases 
             current.setDate(current.getDate() + 1);
         }
     }
 
-    recordEvent(event: Event): void {
+    private recordEvent(event: Event): void {
         log().debug(`PeriodStats[${event.title}] | record | multiday: ${event.isMultiDay()}`);
 
         let events: EventDay[];
@@ -107,7 +106,7 @@ class PeriodStats {
         }
 
         events.forEach(eventDay => {
-                this.recordDayOfEvent(eventDay);
+            this.recordDayOfEvent(eventDay);
         })
     }
 
@@ -136,8 +135,11 @@ class PeriodStats {
         let dayStats = this.days[dateKey];
 
         log().debug(`PeriodStats[${event.event.title}] | recordDayOfEvent | dateKey: ${dateKey}`);
-
-        dayStats.recordEvent(event.event);
+        if (dayStats) {
+            dayStats.recordEvent(event.event);
+        } else {
+            log().info(`PeriodStats[${event.event.title}] | recordDayOfEvent | dateKey: ${dateKey} | null DayStats!`)
+        }
     }
 
     occupancy(): Occupancy {
